@@ -1,24 +1,42 @@
-import http.server
-import socketserver
-import threading
-import os
-
-def run_dummy_server():
-    port = int(os.environ.get("PORT", 10000))
-    handler = http.server.SimpleHTTPRequestHandler
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        httpd.serve_forever()
-
-# Запускаем фальшивый сервер в отдельном потоке, чтобы обмануть Render
-threading.Thread(target=run_dummy_server, daemon=True).start()
 import telebot
 from telebot import types
+import os
+from threading import Thread
 
-# ВАШ НОВЫЙ ТОКЕН
+# Защита: пытаемся загрузить Flask для Render. 
+# Если на компьютере его нет — код НЕ сломается, а просто пойдет дальше.
+try:
+    from flask import Flask
+    HAS_FLASK = True
+except ImportError:
+    HAS_FLASK = False
+
+# ТВОЙ РАБОЧИЙ ТОКЕН И ID
 TOKEN = '8582261966:AAHxn8VvqvPbYcSCKXKFhwU2CeC62D0k_94'
-MY_ID = 267329584  
+MY_ID = 267329584
 
 bot = telebot.TeleBot(TOKEN)
+
+# --- БЛОК ДЛЯ RENDER (Включится только на сервере) ---
+if HAS_FLASK:
+    app = Flask(__name__)
+
+    @app.route('/')
+    def home():
+        return "Bot is running 24/7!"
+
+    def run_flask():
+        port = int(os.environ.get("PORT", 8080))
+        try:
+            app.run(host="0.0.0.0", port=port)
+        except Exception:
+            pass # Если порт занят на ПК, просто игнорируем
+
+    # Запускаем фоновое удержание сети
+    Thread(target=run_flask, daemon=True).start()
+else:
+    print("Режим ПК: Flask не найден, запускаем чистого бота.")
+# --------------------------------------------------------
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -45,4 +63,4 @@ def handle_all(message):
         bot.send_message(MY_ID, f"📩 New message from @{message.from_user.username or 'No username'}:\n\n{message.text}")
 
 print("Bot is running!")
-bot.polling(none_stop=True)
+bot.infinity_polling(timeout=10, long_polling_timeout=5)
