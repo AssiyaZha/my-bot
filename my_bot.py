@@ -1,3 +1,16 @@
+import http.server
+import socketserver
+import threading
+import os
+
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 10000))
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        httpd.serve_forever()
+
+# Запускаем фальшивый сервер в отдельном потоке, чтобы обмануть Render
+threading.Thread(target=run_dummy_server, daemon=True).start()
 import telebot
 from telebot import types
 
