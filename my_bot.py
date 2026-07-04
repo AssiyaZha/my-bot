@@ -12,7 +12,7 @@ except ImportError:
     HAS_FLASK = False
 
 # ТВОЙ РАБОЧИЙ ТОКЕН И ID
-TOKEN = '8582261966:AAHxn8VvqvPbYcSCKXKFhwU2CeC62D0k_94'
+TOKEN = '8582261966:AAE1ftUz_oZIhPMKuNOUZWVzYfyxojw-7SE'
 MY_ID = 267329584
 
 bot = telebot.TeleBot(TOKEN)
